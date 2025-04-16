@@ -13,9 +13,7 @@ function Login() {
     const navigate = useNavigate();
     const setuserEmail = useStudentDashboardStore((state) => state.setuserEmail);
     const handleLogin = async () => {
-
         setErrorMessage("");
-
 
         try {
             await AuthenticationSchema.validate({ email, password });
@@ -27,18 +25,26 @@ function Login() {
         setLoading(true);
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            if (userCredential.user.email) {
-                setuserEmail(userCredential.user.email);
-                localStorage.setItem("userEmail",userCredential.user.email)
+            const userEmail = userCredential.user.email;
+            if (userEmail) {
+                setuserEmail(userEmail);
+                localStorage.setItem("userEmail", userEmail);
+
+                // Admin check (you can customize this check as needed)
+                if (userEmail.toLowerCase().includes("admin")) {
+                    navigate("/admin");
+                } else {
+                    navigate("/student");
+                }
             } else {
                 console.error("User email is null");
             }
-            navigate("/student");
         } catch (error: any) {
             setErrorMessage("The user email or password is not correct");
             setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen w-full flex">
