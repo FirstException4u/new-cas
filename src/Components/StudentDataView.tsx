@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStudentDataViewStore } from '../GlobalStore/StudentDataView';
+import { addDoc, collection, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 const StudentDataView = () => {
   const { StudentData } = useStudentDataViewStore();
+  const[rejectReason , setrejectReason] = useState("");
+  const navigate = useNavigate();
   console.log(StudentData);
 
   const renderValue = (value: any) => {
@@ -12,7 +19,7 @@ const StudentDataView = () => {
     }
     return value != null ? value.toString() : 'N/A'; // Ensure all values are strings, return 'N/A' if null or undefined
   };
-
+  
   const handleClick = () => {
     alert('Add button clicked!');
   };
@@ -30,7 +37,64 @@ const StudentDataView = () => {
     'totalMarks',
     'obtainedMarks',
   ];
-
+  const handleAccepted = async () => {
+    try {
+      const adminRef = doc(db, "admin", StudentData.email);
+  
+      await setDoc(adminRef, {
+        ...StudentData,
+        status: "accepted",
+        timestamp: new Date()
+      });
+     
+      toast.success("Student Accepted!", {
+        position: "top-center",
+      });
+      
+    } catch (error) {
+      toast.error("Error while accepting student!");
+      console.error("Error adding to admin collection:", error);
+    }
+    finally{
+      navigate("/admin")
+    }
+  };
+  
+  const handleRejected = async () => {
+    const reason = prompt("Please provide a reason for rejection:");
+  
+    if (!reason || reason.trim() === "") {
+      toast.warn("Rejection reason is required.");
+      return;
+    }
+  
+    setrejectReason(reason);
+  
+    try {
+      const userRef = doc(db, "Users", StudentData.email);
+      await deleteDoc(userRef);
+      
+      console.log("document deleted ",StudentData.email)
+      const adminRef = doc(db, "admin", StudentData.email);
+      await setDoc(adminRef, {
+        ...StudentData,
+        status: "rejected",
+        reason: reason,
+        timestamp: new Date()
+      });
+       
+      toast.error("Student Rejected.", {
+        position: "top-center",
+      });
+    } catch (error) {
+      toast.error("Error while rejecting student!");
+      console.error("Error adding to admin collection:", error);
+    }
+    finally{
+      navigate("/admin")
+    }
+  };
+  
   return (
     <div className="text-white p-5">
       <h1 className="text-2xl font-bold mb-4">Student Details</h1>
@@ -206,12 +270,22 @@ const StudentDataView = () => {
       </table>
 
       {/* Button */}
-      <button
-        onClick={handleClick}
-        className="mt-4 bg-blue-500 text-white py-2 px-6 rounded"
-      >
-        Add Student
-      </button>
+      <div className="w-full flex justify-evenly font-semibold">
+        <button
+          onClick={handleAccepted}
+          className="mt-4 bg-green-500 text-white py-2 px-6 rounded shadow-lg shadow-black"
+        >
+          Accepted
+        </button>
+        <button
+          onClick={handleRejected}
+          className="mt-4 bg-red-500 text-white py-2 px-6 rounded shadow-lg shadow-black"
+        >
+          Rejected
+        </button>
+       
+      </div>
+      <ToastContainer />
     </div>
   );
 };
