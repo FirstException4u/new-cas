@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: Kajiro;
+    src: url('/font/Kajiro Bold.ttf');
+}
+@font-face {
+    font-family: SansSerif;
+    src: url('/font/SansSerifExbFLF.woff');
+}
+@font-face {
+    font-family: Header;
+    src: url('/font/travel-agency-font.woff');
+}
