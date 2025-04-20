@@ -53,7 +53,7 @@ const useFetchStudentsData = () => {
 };
 
 // Loading spinner component
-const LoadingSpinner = () => (
+export const LoadingSpinner = () => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div className="flex flex-col items-center justify-center">
       <svg className="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -66,15 +66,16 @@ const LoadingSpinner = () => (
 );
 
 // Header component
-const Header = () => (
-  <div className="w-full font-[Kajiro] text-[8vw] max-sm:text-[16vw] text-white flex justify-between items-center">
-    <h1>Welcome Tashvarya</h1>
-    <img
-      src="https://images.unsplash.com/photo-1564485377539-4af72d1f6a2f?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-      className="h-20 w-20 rounded-[50%] object-cover object-top max-[320px]:h-16 max-[320px]:w-16"
-    />
-  </div>
-);
+const Header = () => {
+  const { userEmail } = useStudentDashboardStore();
+  const email = userEmail || localStorage.getItem("userEmail") || "";
+
+  return (
+    <div className="w-full font-[Kajiro] text-[8vw] max-sm:text-[16vw] text-white flex justify-between items-center">
+      <h1>Welcome {email.split("@")[0]}</h1>
+    </div>
+  );
+}
 
 // Admin section component
 const AdminSection = ({ studentsData }: { studentsData: any[] }) => (
@@ -90,7 +91,7 @@ const AdminSection = ({ studentsData }: { studentsData: any[] }) => (
 const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
 
   const navigate = useNavigate();
-  const { updateField,StudentData } = useStudentDataViewStore();
+  const { updateField, StudentData } = useStudentDataViewStore();
 
   const handleRowClick = async (studentEmail: string) => {
     try {
@@ -112,7 +113,7 @@ const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
           });
           console.log(studentData)
 
-          
+
         }
 
 
@@ -172,25 +173,29 @@ const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
 };
 
 // Student section component (non-admin)
-const StudentSection = ({ NavigateToForm, formStatus }: { NavigateToForm: () => void, formStatus: () => void }) => (
-  <div className="w-full h-[50vh] flex gap-x-5">
-    <div
-      className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-2 border-amber-500 bg-red-600"
-      onClick={NavigateToForm}
-    >
-      <h1 className="text-[4vw] font-[header]">Fill up the Form</h1>
+const StudentSection = ({ NavigateToForm, formStatus, formLoader }: { NavigateToForm: () => void, formStatus: () => void, formLoader: boolean }) => {
+  return (
+    <div className="w-full h-[50vh] flex gap-x-5">
+      {formLoader && <LoadingSpinner/>}
+      <div
+        className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-4 border-amber-500 bg-yellow-50"
+        onClick={NavigateToForm}
+      >
+        <h1 className="text-[4vw] font-[header]">Fill up the Form</h1>
+      </div>
+      <div
+        className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-4 border-amber-500 bg-yellow-50"
+        onClick={formStatus}
+      >
+        <h1 className="text-[4vw] font-[header]">Form Status</h1>
+      </div>
+    
     </div>
-    <div
-      className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-2 border-amber-500 bg-red-600"
-      onClick={formStatus}
-    >
-      <h1 className="text-[4vw] font-[header]">Form Status</h1>
-    </div>
-  </div>
-);
+  )
+}
 
 // Model component (used in AnimatePresence)
-const Model = ({ dataToshow }: { dataToshow: string }) => {
+export const Model = ({ dataToshow }: { dataToshow: string }) => {
   const { showModel, setshowModel } = useStudentDashboardStore();
   return (
     <motion.div
@@ -220,9 +225,11 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
   const { studentsData, isLoading } = useFetchStudentsData();
   const navigate = useNavigate();
   const currentUserEmail = localStorage.getItem("userEmail");
-
+  const [formLoader, setformLoader] = useState(false);
+  
   const NavigateToForm = async () => {
     const emailToUse = currentUserEmail || userEmail;
+    setformLoader(true);
 
     if (!emailToUse) {
       console.error("User email not available. Cannot fetch data.");
@@ -234,7 +241,8 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
       const docRef = doc(db, "Users", emailToUse);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        alert("You have already filled up the form. Check the form status.");
+        setdataToShow("You have already filled up the form. Check the form status.");
+        setshowModel(true);
         navigate("/student", { replace: true });
       } else {
         navigate("/form");
@@ -242,17 +250,20 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
     } catch (error) {
       console.error("Error during form page check:", error);
     }
+    finally {
+      setformLoader(false);
+    }
   };
 
   const formstatus = async () => {
     const userEmail = localStorage.getItem("userEmail") || useStudentDashboardStore().userEmail;
-
+    
     if (!userEmail) {
       console.error("User email not found.");
       alert("User email not found. Please sign in again.");
       return;
     }
-
+    setformLoader(true);
     try {
       const docRef = doc(db, "admin", userEmail);
       const docSnap = await getDoc(docRef);
@@ -265,16 +276,25 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
             Your Form is Rejected,Please Fill the Form Again (Considering the Reason)
             ${docSnap.data().reason}
             `)
+            localStorage.removeItem("formStatus")
         }
         console.log("User email is present in the admin collection.");
       } else {
-        setdataToShow("Your Form is Still Under Verification Process")
+        const docRef = doc(db, "Users", userEmail);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setdataToShow("Your Form is under verification process ")
+        }
+        else {
+          setdataToShow("Your haven't filled the Form yet! ")
+        }
       }
     } catch (error) {
       console.error("Error checking form status:", error);
     }
     finally {
       setshowModel(true)
+      setformLoader(false)
     }
   };
 
@@ -287,7 +307,7 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
         {whoisThis === "Admin" ? (
           <AdminSection studentsData={studentsData} />
         ) : (
-          <StudentSection NavigateToForm={NavigateToForm} formStatus={formstatus} />
+          <StudentSection NavigateToForm={NavigateToForm} formStatus={formstatus} formLoader={formLoader} />
         )}
       </div>
 

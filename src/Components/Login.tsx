@@ -5,7 +5,7 @@ import { auth } from "../../config/firebase";
 import { AuthenticationSchema } from "../ValidationSchema/AuthenticationSchema";
 import { useStudentDashboardStore } from "../GlobalStore/StudentDashboardStore";
 
-function Login() {
+function Login({type}: {type: string}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -30,7 +30,6 @@ function Login() {
                 setuserEmail(userEmail);
                 localStorage.setItem("userEmail", userEmail);
 
-                // Admin check (you can customize this check as needed)
                 if (userEmail.toLowerCase().includes("admin")) {
                     navigate("/admin");
                 } else {
@@ -53,12 +52,12 @@ function Login() {
             </div>
             <div className="min-h-screen w-1/2 flex flex-col items-center justify-evenly bg-white">
                 <div className="w-full text-center">
-                    <h1 className="text-[10vw] font-[Kajiro]">Welcome Back!</h1>
+                    <h1 className="text-[10vw] font-[Kajiro]">Welcome {type}!</h1>
                     <h3 className="text-[2vw] font-[Header]">
                         Simplify the Student Management and boost Your Productivity
                     </h3>
                     <h3 className="text-[2vw] font-[Header]">
-                        with <strong className="text-orange-500"> CAS </strong>. Get Started For FREE.
+                        with <strong className="text-orange-500"> CAS </strong>.
                     </h3>
                 </div>
                 <div className="w-full flex flex-col items-center justify-evenly">
@@ -85,7 +84,7 @@ function Login() {
                     {errorMessage && !loading && (
                         <p className="text-red-500 mt-2">{errorMessage}</p>
                     )}
-                    <h1 className="font-[Header] text-[2vw] text-black mt-5" onClick={() => navigate("/Signup")}>
+                    <h1 className="font-[Header] text-[2vw] text-black mt-5 cursor-pointer" onClick={() => navigate("/Signup")}>
                         Have N't Register yet?
                     </h1>
                 </div>

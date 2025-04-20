@@ -77,7 +77,7 @@ function LandingPage() {
                 onMouseEnter={() => setmaskSize(300)}
                 onMouseLeave={() => setmaskSize(20)}
               >
-               Arrey Yaar Hover kar! niche card par
+               Please Hover The Below Card's
               </h1>
             </motion.div>
           </div>

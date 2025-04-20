@@ -36,6 +36,7 @@ const FormInput: React.FC<FormInputProps> = ({
         type={type}
         {...register(name)}
         className="w-full border p-2 rounded"
+        onChange={(e) => console.log(`Input value for ${name}:`, e.target.value)}
       />
     )}
     {error && <p className="text-red-500 text-sm">{error}</p>}

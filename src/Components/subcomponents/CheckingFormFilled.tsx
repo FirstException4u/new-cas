@@ -1,7 +1,12 @@
-import { ReactNode, useEffect } from 'react';
-import { useNavigate, Navigate } from "react-router-dom";
+import { ReactNode, useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from '../../../config/firebase';
+import { LoadingSpinner} from './SideContent';
+
 
 interface CheckingFormFilledProps {
+
   children: ReactNode;
 }
 
@@ -9,7 +14,6 @@ function AlreadyFilledMessage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-   
     const timeout = setTimeout(() => {
       navigate("/student", { replace: true });
     }, 3000);
@@ -37,17 +41,38 @@ const containerStyle: React.CSSProperties = {
 };
 
 function CheckingFormFilled({ children }: CheckingFormFilledProps) {
- 
-  const storedFormStatus = localStorage.getItem("formStatus");
-  const formStatus = storedFormStatus ? JSON.parse(storedFormStatus) : {};
-  const formFilled = formStatus.formFilled;
+  
+  const [formFilled, setFormFilled] = useState<boolean | null>(null);
+  const userEmail = localStorage.getItem("userEmail");
+
+  useEffect(() => {
+    const checkFormStatus = async () => {
+      if (userEmail) {
+        try {
+          const docRef = doc(db, "Users", userEmail);
+          const docSnap = await getDoc(docRef);
+          setFormFilled(docSnap.exists());
+        } catch (error) {
+          console.error("Error checking form status:", error);
+          setFormFilled(false);
+        }
+      } else {
+        setFormFilled(false);
+      }
+    };
+
+    checkFormStatus();
+  }, [userEmail]);
+
+  if (formFilled === null) {
+    return (<LoadingSpinner/>) 
+  }
 
 
   if (!formFilled) {
     return <>{children}</>;
   }
 
- 
   return <AlreadyFilledMessage />;
 }
 

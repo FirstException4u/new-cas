@@ -49,6 +49,7 @@ const PersonalDetails: React.FC = () => {
         updateField(key as keyof StudentDataInterface, value);
       }
     });
+    console.log(data);
     setActiveFormStep(ActiveFormStep + 1);
   };
 

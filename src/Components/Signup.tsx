@@ -39,7 +39,7 @@ function Signup() {
             Simplify the Student Management and boost Your Productivity
           </h3>
           <h3 className="text-[2vw] font-[Header]">
-            with <strong className="text-orange-500"> CAS </strong>. Get Started For FREE.
+            with <strong className="text-orange-500"> CAS </strong>.
           </h3>
         </div>
         <form onSubmit={handleSubmit(handleSignup)} className="w-full flex flex-col items-center justify-evenly">
