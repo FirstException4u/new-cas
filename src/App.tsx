@@ -8,9 +8,11 @@ import Form from './Components/Form';
 import Signup from './Components/Signup';
 import StudentDataView from './Components/StudentDataView';
 import CheckingFormFilled from './Components/subcomponents/CheckingFormFilled';
+import { AdminProtectedRoute, StudentProtectedRoute } from './Components/ProtectedRoute';
 
 
 function App() {
+
 
   return (
     <Router>
@@ -18,22 +20,34 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/admin" element={
-            <AdminDashboard />
-            } />
-          <Route path="/student" element={<StudentDashboard />} />
-          <Route path="/admin-login" element={<Login type="admin"/>} />
+            <AdminProtectedRoute>
+              <AdminDashboard />
+            </AdminProtectedRoute>
+          } />
+          <Route path="/student" element={
+            <StudentProtectedRoute>
+              <StudentDashboard />
+            </StudentProtectedRoute>
+          } />
+          <Route path="/admin-login" element={<Login type="admin" />} />
           <Route path="/student-login" element={<Login type="student" />} />
           <Route path="/student-page" element={<StudentPage />} />
           <Route
             path="/form"
             element={
-              <CheckingFormFilled>
-                <Form />
-              </CheckingFormFilled>
+              <StudentProtectedRoute>
+                <CheckingFormFilled>
+                  <Form />
+                </CheckingFormFilled>
+              </StudentProtectedRoute>
             }
           />
           <Route path="/Signup" element={<Signup />} />
-          <Route path="/StudentView" element={<StudentDataView />} />
+          <Route path="/StudentView" element={
+            <AdminProtectedRoute>
+              <StudentDataView />
+            </AdminProtectedRoute>
+          } />
         </Routes>
       </div>
     </Router>

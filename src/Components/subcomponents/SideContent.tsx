@@ -69,10 +69,11 @@ export const LoadingSpinner = ({dataToShow} : {dataToShow:string}) => (
 const Header = () => {
   const { userEmail } = useStudentDashboardStore();
   const email = userEmail || localStorage.getItem("userEmail") || "";
-
+  const navigate = useNavigate();
   return (
     <div className="w-full font-[Kajiro] text-[8vw] max-sm:text-[16vw] text-white flex justify-between items-center">
       <h1>Welcome {email.split("@")[0]}</h1>
+      <h1 className="text-[4vw] font-[Header] cursor-pointer" onClick={()=>{navigate("/")}}>Log Out</h1>
     </div>
   );
 }

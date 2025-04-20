@@ -10,6 +10,7 @@ function LandingPage() {
   const textContainerRef = useRef<HTMLDivElement>(null);
   const navigate=useNavigate();
   let computedMaskSize = maskSize;
+  localStorage.clear();
 
   const handleMouseMovement = (e: React.MouseEvent<HTMLDivElement>) => {
     if (textContainerRef.current) {
