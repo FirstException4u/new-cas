@@ -53,14 +53,14 @@ const useFetchStudentsData = () => {
 };
 
 // Loading spinner component
-export const LoadingSpinner = () => (
+export const LoadingSpinner = ({dataToShow} : {dataToShow:string}) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div className="flex flex-col items-center justify-center">
       <svg className="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
       </svg>
-      <p className="text-white text-xl">Loading...</p>
+      <p className="text-white text-xl">{dataToShow}...</p>
     </div>
   </div>
 );
@@ -176,7 +176,7 @@ const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
 const StudentSection = ({ NavigateToForm, formStatus, formLoader }: { NavigateToForm: () => void, formStatus: () => void, formLoader: boolean }) => {
   return (
     <div className="w-full h-[50vh] flex gap-x-5">
-      {formLoader && <LoadingSpinner/>}
+      {formLoader && <LoadingSpinner dataToShow="loading"/>}
       <div
         className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-4 border-amber-500 bg-yellow-50"
         onClick={NavigateToForm}
@@ -300,7 +300,7 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
 
   return (
     <div className="min-h-screen w-full max-sm:w-full p-5 max-sm:p-2 relative">
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <LoadingSpinner dataToShow="loading"/>}
 
       <div className="min-h-[90vh] w-full bg-red-500 border-2 border-amber-300 rounded-3xl px-8 max-sm:px-4 py-0 max-sm:py-2 flex items-center justify-center flex-col">
         <Header />

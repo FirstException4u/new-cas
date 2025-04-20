@@ -65,7 +65,7 @@ function CheckingFormFilled({ children }: CheckingFormFilledProps) {
   }, [userEmail]);
 
   if (formFilled === null) {
-    return (<LoadingSpinner/>) 
+    return (<LoadingSpinner dataToShow="loading"/>) 
   }
 
 

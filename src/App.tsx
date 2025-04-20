@@ -17,7 +17,9 @@ function App() {
       <div className="min-h-screen w-full bg-[#202020]">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={
+            <AdminDashboard />
+            } />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/admin-login" element={<Login type="admin"/>} />
           <Route path="/student-login" element={<Login type="student" />} />

@@ -7,6 +7,7 @@ import { useStudentDashboardStore } from "../../../GlobalStore/StudentDashboardS
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../../../config/firebase";
 import { usePersonalDetailsStore } from "../../../GlobalStore/PersonalDetailsStore";
+import { LoadingSpinner } from "../SideContent";
 
 const FILE_SIZE_LIMIT = 200 * 1024;
 
@@ -136,6 +137,7 @@ export const DocumentUploadForm = () => {
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { ActiveFormStep, setActiveFormStep } = useFormStore();
+  const [loader,setloader] = useState(false);
   const navigate = useNavigate();
 
   const documentOptions = ["AadharCard", "XII Marksheet", "X Marksheet", ...(Data.admissionCategory !== 'General' ? ["Category Certificate"] : [])];
@@ -196,14 +198,13 @@ export const DocumentUploadForm = () => {
       setSubmitError("Please upload one file for each document type.");
       return;
     }
-
+    setloader(true);
     setIsSubmitting(true);
     setSubmitError("");
 
     try {
       updateField("email", userEmail)
       const updatedStudentData = { ...StudentData };
-     
       const uploadPromises = documentGroups.map(async (group) => {
         const file = group.files[0].file;
         const filePath = `document/College-Admission-Data/${Date.now()}_${group.option}`;
@@ -228,7 +229,7 @@ export const DocumentUploadForm = () => {
       });
       console.log(userEmail,updatedStudentData)
       await Promise.all(uploadPromises);
-   
+     
       const email = userEmail || localStorage.getItem("userEmail");
       if (email) {
         await setDoc(doc(db, "Users", email), updatedStudentData);
@@ -247,6 +248,7 @@ export const DocumentUploadForm = () => {
       setSubmitError("Error uploading documents. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setloader(false);
     }
   };
 
@@ -309,6 +311,7 @@ export const DocumentUploadForm = () => {
           </div>
         </div>
       </div>
+      {loader && <LoadingSpinner dataToShow="Submitting up your application"/>}
     </div>
   );
 };
