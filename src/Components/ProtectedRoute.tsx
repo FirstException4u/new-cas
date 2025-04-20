@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
 }
 
 export function StudentProtectedRoute({ children }: ProtectedRouteProps) {
-    const Email = useStudentDashboardStore()?.userEmail || localStorage.getItem("userEmail");
+    const Email = localStorage.getItem("userEmail");
     const navigate = useNavigate();
-
+     console.log(Email)
     useEffect(() => {
         if (!Email) {
             navigate("/", { replace: true });
@@ -29,7 +29,7 @@ export function StudentProtectedRoute({ children }: ProtectedRouteProps) {
 
 
 export function AdminProtectedRoute({ children }: ProtectedRouteProps) {
-    const Email = useStudentDashboardStore()?.userEmail || localStorage.getItem("userEmail");
+    const Email = localStorage.getItem("userEmail");
     const navigate = useNavigate();
 
     useEffect(() => {
