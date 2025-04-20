@@ -5,6 +5,7 @@ import { useFormStore, useStudentDataStore } from "../../../GlobalStore/FormStor
 import { AddressDetailsInterfaces,FieldProps,CorrespondenceFieldProps,NavigationProps } from "../../../Interfaces/AddressDetailsInterfaces";
 import { AddressDetailsValidation } from "../../../ValidationSchema/AddressDetailsValidation";
 import { useAddressDetailsStore } from "../../../GlobalStore/AddressDetailsStore";
+import { useStudentDashboardStore } from "../../../GlobalStore/StudentDashboardStore";
 
 
 
@@ -89,6 +90,7 @@ const AddressDetails: React.FC = () => {
   const { ActiveFormStep, setActiveFormStep } = useFormStore();
   const { Data, setData } = useAddressDetailsStore();
   const {updateField} = useStudentDataStore();
+  const userEmail = useStudentDashboardStore()?.userEmail || localStorage.getItem("userEmail");
   const {
     register,
     handleSubmit,
@@ -119,7 +121,7 @@ const AddressDetails: React.FC = () => {
       correspondenceAddress: formValues.Correspondenceaddress,
       isSameAsPermanent: formValues.isSameAsPermanent,
     };
-
+    updateField("email",userEmail)
     setData(updatedData);
     updateField("Permanentaddress",updatedData.permanentAddress);
     updateField("CorrespondenceAddress",updatedData.correspondenceAddress);

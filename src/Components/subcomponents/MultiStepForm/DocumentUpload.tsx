@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DocumentUploadInterface } from "../../../Interfaces/DocumentUploadInterface";
 import { useFormStore, useStudentDataStore } from "../../../GlobalStore/FormStore";
@@ -139,7 +139,7 @@ export const DocumentUploadForm = () => {
   const { ActiveFormStep, setActiveFormStep } = useFormStore();
   const [loader,setloader] = useState(false);
   const navigate = useNavigate();
-
+  console.log(StudentData)
   const documentOptions = ["AadharCard", "XII Marksheet", "X Marksheet", ...(Data.admissionCategory !== 'General' ? ["Category Certificate"] : [])];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +154,7 @@ export const DocumentUploadForm = () => {
       }
     }
   };
+ 
 
   const handleAdd = () => {
     if (!uploadedFile) {
@@ -203,8 +204,9 @@ export const DocumentUploadForm = () => {
     setSubmitError("");
 
     try {
-      updateField("email", userEmail)
+      
       const updatedStudentData = { ...StudentData };
+      console.log(updatedStudentData)
       const uploadPromises = documentGroups.map(async (group) => {
         const file = group.files[0].file;
         const filePath = `document/College-Admission-Data/${Date.now()}_${group.option}`;

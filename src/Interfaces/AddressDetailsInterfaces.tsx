@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 export interface AddressDetailsInterfaces {
     permanentAddress:string,
     isSameAsPermanent: boolean;
-    correspondenceAddress:string
+    correspondenceAddress:string;
   }
 export interface FieldProps {
     register: ReturnType<typeof useForm>["register"];
