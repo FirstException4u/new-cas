@@ -7,7 +7,6 @@ import StudentPage from './Components/StudentPage';
 import Form from './Components/Form';
 import Signup from './Components/Signup';
 import StudentDataView from './Components/StudentDataView';
-import CheckingFormFilled from './Components/subcomponents/CheckingFormFilled';
 import { AdminProtectedRoute, StudentProtectedRoute } from './Components/ProtectedRoute';
 
 
@@ -36,9 +35,7 @@ function App() {
             path="/form"
             element={
               <StudentProtectedRoute>
-                <CheckingFormFilled>
                   <Form />
-                </CheckingFormFilled>
               </StudentProtectedRoute>
             }
           />

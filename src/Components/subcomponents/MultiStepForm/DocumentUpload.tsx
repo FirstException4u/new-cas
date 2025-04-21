@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DocumentUploadInterface } from "../../../Interfaces/DocumentUploadInterface";
 import { useFormStore, useStudentDataStore } from "../../../GlobalStore/FormStore";
@@ -10,7 +10,6 @@ import { usePersonalDetailsStore } from "../../../GlobalStore/PersonalDetailsSto
 import { LoadingSpinner } from "../SideContent";
 
 const FILE_SIZE_LIMIT = 200 * 1024;
-
 const generateId = (): string => Math.random().toString(36).substr(2, 9);
 
 interface DocumentSelectorProps {
@@ -22,9 +21,7 @@ interface DocumentSelectorProps {
 
 export const DocumentSelector: React.FC<DocumentSelectorProps> = ({ selected, onSelect, disabledOptions, documentOptions }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Name of Document
-    </label>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Name of Document</label>
     <select
       value={selected}
       onChange={(e) => onSelect(e.target.value)}
@@ -47,9 +44,7 @@ const FileUploader: React.FC<DocumentUploadInterface["FileUploaderProps"]> = ({
   isDisabled = false,
 }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Upload Document
-    </label>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Document</label>
     <div className="flex items-center gap-4">
       <input
         type="file"
@@ -61,10 +56,11 @@ const FileUploader: React.FC<DocumentUploadInterface["FileUploaderProps"]> = ({
       />
       <label
         htmlFor="file-upload"
-        className={`px-4 py-2 rounded-md ${isDisabled
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-          }`}
+        className={`px-4 py-2 rounded-md ${
+          isDisabled
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+        }`}
       >
         {isDisabled ? "✓ Uploaded" : "☐ Browse..."}
       </label>
@@ -126,21 +122,27 @@ const Button: React.FC<DocumentUploadInterface["ButtonProps"]> = ({ onClick, chi
   </button>
 );
 
-export const DocumentUploadForm = () => {
+export const DocumentUploadForm: React.FC = () => {
   const { StudentData, updateField } = useStudentDataStore();
   const userEmail = useStudentDashboardStore()?.userEmail || localStorage.getItem("userEmail");
   const { Data } = usePersonalDetailsStore();
+  const navigate = useNavigate();
+
+  const { ActiveFormStep, setActiveFormStep, setUploadProgress } = useFormStore();
   const [selectedDoc, setSelectedDoc] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [documentGroups, setDocumentGroups] = useState<DocumentUploadInterface["DocumentGroup"][]>([]);
   const [fileError, setFileError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { ActiveFormStep, setActiveFormStep } = useFormStore();
-  const [loader,setloader] = useState(false);
-  const navigate = useNavigate();
-  console.log(StudentData)
-  const documentOptions = ["AadharCard", "XII Marksheet", "X Marksheet", ...(Data.admissionCategory !== 'General' ? ["Category Certificate"] : [])];
+  const [loader, setLoader] = useState(false);
+
+  const documentOptions = [
+    "AadharCard",
+    "XII Marksheet",
+    "X Marksheet",
+    ...(Data.admissionCategory !== 'General' ? ["Category Certificate"] : []),
+  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError("");
@@ -154,7 +156,6 @@ export const DocumentUploadForm = () => {
       }
     }
   };
- 
 
   const handleAdd = () => {
     if (!uploadedFile) {
@@ -165,7 +166,6 @@ export const DocumentUploadForm = () => {
       setFileError("Please select a document option!");
       return;
     }
-
     const fileExtension = uploadedFile.name.split(".").pop() || "";
     const newFile: DocumentUploadInterface["FileInfo"] = {
       id: generateId(),
@@ -173,7 +173,6 @@ export const DocumentUploadForm = () => {
       downloadLink: URL.createObjectURL(uploadedFile),
       file: uploadedFile,
     };
-
     setDocumentGroups((prevGroups) => {
       const existingGroup = prevGroups.find((group) => group.option === selectedDoc);
       if (existingGroup) {
@@ -184,7 +183,6 @@ export const DocumentUploadForm = () => {
         return [...prevGroups, { option: selectedDoc, files: [newFile] }];
       }
     });
-
     setSelectedDoc("");
     setUploadedFile(null);
     setFileError("");
@@ -199,19 +197,20 @@ export const DocumentUploadForm = () => {
       setSubmitError("Please upload one file for each document type.");
       return;
     }
-    setloader(true);
+    setLoader(true);
     setIsSubmitting(true);
     setSubmitError("");
 
+    // initialize progress
+    setUploadProgress(0);
+
     try {
-      
       const updatedStudentData = { ...StudentData };
-      console.log(updatedStudentData)
-      const uploadPromises = documentGroups.map(async (group) => {
+      for (let i = 0; i < documentGroups.length; i++) {
+        const group = documentGroups[i];
         const file = group.files[0].file;
         const filePath = `document/College-Admission-Data/${Date.now()}_${group.option}`;
         const downloadURL = await uploadFileAndGetDownloadURL(file, filePath);
-
         switch (group.option) {
           case "AadharCard":
             updatedStudentData.aadharUrl = downloadURL;
@@ -225,13 +224,12 @@ export const DocumentUploadForm = () => {
           case "XII Marksheet":
             updatedStudentData.twelvethCertificateUrl = downloadURL;
             break;
-          default:
-            break;
         }
-      });
-      console.log(userEmail,updatedStudentData)
-      await Promise.all(uploadPromises);
-     
+        // update overall progress in global store
+        const progress = Math.round(((i + 1) / documentGroups.length) * 100);
+        setUploadProgress(progress);
+      }
+
       const email = userEmail || localStorage.getItem("userEmail");
       if (email) {
         await setDoc(doc(db, "Users", email), updatedStudentData);
@@ -243,27 +241,20 @@ export const DocumentUploadForm = () => {
       updateField("categoryCertificateUrl", updatedStudentData.categoryCertificateUrl);
       updateField("tenthCertificateUrl", updatedStudentData.tenthCertificateUrl);
       updateField("twelvethCertificateUrl", updatedStudentData.twelvethCertificateUrl);
-      localStorage.setItem("formStatus", JSON.stringify({ userEmail: userEmail, formFilled: true }));
+      localStorage.setItem("formStatus", JSON.stringify({ userEmail, formFilled: true }));
+
       navigate("/student");
     } catch (error) {
       console.error("Upload error:", error);
       setSubmitError("Error uploading documents. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setloader(false);
+      setLoader(false);
     }
   };
 
-
-  const getDisabledOptions = () => {
-    return documentGroups.map((group) => group.option);
-  };
-
-  const isFileUploaderDisabled = (option: string) => {
-    return documentGroups.some((group) => group.option === option);
-  };
-
-
+  const getDisabledOptions = () => documentGroups.map((group) => group.option);
+  const isFileUploaderDisabled = (option: string) => documentGroups.some((group) => group.option === option);
 
   return (
     <div className="w-full mx-auto p-6 rounded-lg text-gray-500">
@@ -305,7 +296,7 @@ export const DocumentUploadForm = () => {
           <div>
             <button
               type="button"
-              onClick={() => { setActiveFormStep(ActiveFormStep - 1) }}
+              onClick={() => setActiveFormStep(ActiveFormStep - 1)}
               className=" mt-4 bg-green-500 font-bold text-white py-2 px-4 rounded"
             >
               Previous
@@ -313,7 +304,7 @@ export const DocumentUploadForm = () => {
           </div>
         </div>
       </div>
-      {loader && <LoadingSpinner dataToShow="Submitting up your application"/>}
+      {loader && <LoadingSpinner dataToShow="Submitting your application" />} 
     </div>
   );
 };

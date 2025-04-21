@@ -3,6 +3,8 @@ import { create } from "zustand";
 export interface FormStoreState {
   ActiveFormStep: number;
   setActiveFormStep: (value: number) => void;
+  uploadProgress: number;
+  setUploadProgress: (p: number) => void;
 }
 
 export interface StudentDataInterface {
@@ -39,6 +41,7 @@ export interface StudentDataStore {
   StudentData: StudentDataInterface;
   setData: (data: StudentDataInterface) => void;
   updateField: (field: keyof StudentDataInterface, value: any) => void;
+  
 }
 
 export const useStudentDataStore = create<StudentDataStore>((set) => ({
@@ -76,10 +79,12 @@ export const useStudentDataStore = create<StudentDataStore>((set) => ({
     set((state) => ({
       StudentData: { ...state.StudentData, [field]: value }
     })),
+    
 }));
 
 export const useFormStore = create<FormStoreState>((set) => ({
   ActiveFormStep: 0,
-  
+  uploadProgress: -1,
+  setUploadProgress: (p) => set({ uploadProgress: p }),
   setActiveFormStep: (value: number) => set({ ActiveFormStep: value }),
 }));

@@ -2,13 +2,12 @@
 import { useState, useEffect } from "react";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../../../config/firebase";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react"; // Correct import for motion
 import { useStudentDashboardStore } from "../../GlobalStore/StudentDashboardStore";
-import { useLocation } from "react-router-dom";
-import StudentDataView from "../StudentDataView";
 import { StudentDataViewInterface } from "../../GlobalStore/StudentDataView";
 import { useStudentDataViewStore } from "../../GlobalStore/StudentDataView";
+import { useFormStore } from "../../GlobalStore/FormStore";
 
 // Helper to format the date
 const formatDate = (timestamp: any) => {
@@ -30,13 +29,15 @@ const useFetchStudentsData = () => {
         const students: any[] = [];
         querySnapshot.forEach((doc) => {
           const studentData = doc.data();
-          students.push({
-            firstName: studentData.firstName || "N/A",
-            lastName: studentData.lastName || "N/A",
-            dob: formatDate(studentData.dob),
-            email: studentData.email || "N/A",
-            gender: studentData.gender || "N/A",
-          });
+          if (!("status" in studentData)) {
+            students.push({
+              firstName: studentData.firstName || "N/A",
+              lastName: studentData.lastName || "N/A",
+              dob: formatDate(studentData.dob),
+              email: studentData.email || "N/A",
+              gender: studentData.gender || "N/A",
+            });
+          }
         });
         setStudentsData(students);
       } catch (error) {
@@ -53,17 +54,24 @@ const useFetchStudentsData = () => {
 };
 
 // Loading spinner component
-export const LoadingSpinner = ({dataToShow} : {dataToShow:string}) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="flex flex-col items-center justify-center">
-      <svg className="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
-      <p className="text-white text-xl">{dataToShow}...</p>
+export const LoadingSpinner: React.FC<{ dataToShow: string }> = ({ dataToShow }) => {
+  const { uploadProgress } = useFormStore();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="flex flex-col items-center justify-center">
+        <svg className="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+        <p className="text-white text-2xl font-[Header] tracking-wide">
+          {dataToShow}
+        </p>
+        <h1 className="font-bold text-amber-200">{uploadProgress !== -1 && uploadProgress !== 100 && ` ${uploadProgress}% completed`}</h1>
+      </div>
     </div>
-  </div>
-);
+  )
+}
+
 
 // Header component
 const Header = () => {
@@ -73,7 +81,7 @@ const Header = () => {
   return (
     <div className="w-full font-[Kajiro] text-[8vw] max-sm:text-[16vw] text-white flex justify-between items-center">
       <h1>Welcome {email.split("@")[0]}</h1>
-      <h1 className="text-[4vw] font-[Header] cursor-pointer" onClick={()=>{navigate("/")}}>Log Out</h1>
+      <h1 className="text-[4vw] font-[Header] cursor-pointer" onClick={() => { navigate("/") }}>Log Out</h1>
     </div>
   );
 }
@@ -81,18 +89,26 @@ const Header = () => {
 // Admin section component
 const AdminSection = ({ studentsData }: { studentsData: any[] }) => (
   <div className="min-h-[50vh] w-full bg-white p-5 mb-5 rounded-3xl shadow-black shadow-2xl">
-    <div className="w-full text-center relative">
-      <h1 className="font-[Header] text-[4vw] text-center">Student Page</h1>
-      <img src="/MenuAction.svg" className="h-20 max-sm:h-10 absolute top-0 right-0" />
-    </div>
-    <StudentTable studentsData={studentsData} />
+    {studentsData.length > 0 ?
+      <>
+        <div className="w-full text-center relative">
+          <h1 className="font-[Header] text-[4vw] text-center">Student Page</h1>
+          <img src="/MenuAction.svg" className="h-20 max-sm:h-10 absolute top-0 right-0" />
+        </div>
+        <StudentTable studentsData={studentsData} />
+      </>
+      :
+      <div className="w-full h-[50vh] flex items-center justify-center">
+        <h1 className="font-[Header] text-5xl text-gray-600 ">No Data.</h1>
+      </div>
+    }
   </div>
 );
 
 const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
 
   const navigate = useNavigate();
-  const { updateField, StudentData } = useStudentDataViewStore();
+  const { updateField } = useStudentDataViewStore();
 
   const handleRowClick = async (studentEmail: string) => {
     try {
@@ -166,7 +182,6 @@ const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
           ))}
         </tbody>
       </table>
-
       {/* If a student is selected, display the StudentDataView */}
 
     </div>
@@ -177,7 +192,7 @@ const StudentTable = ({ studentsData }: { studentsData: any[] }) => {
 const StudentSection = ({ NavigateToForm, formStatus, formLoader }: { NavigateToForm: () => void, formStatus: () => void, formLoader: boolean }) => {
   return (
     <div className="w-full h-[50vh] flex gap-x-5">
-      {formLoader && <LoadingSpinner dataToShow="loading"/>}
+      {formLoader && <LoadingSpinner dataToShow="loading" />}
       <div
         className="w-1/2 flex items-center cursor-pointer justify-center rounded-3xl border-4 border-amber-500 bg-yellow-50"
         onClick={NavigateToForm}
@@ -190,7 +205,7 @@ const StudentSection = ({ NavigateToForm, formStatus, formLoader }: { NavigateTo
       >
         <h1 className="text-[4vw] font-[header]">Form Status</h1>
       </div>
-    
+
     </div>
   )
 }
@@ -200,7 +215,7 @@ export const Model = ({ dataToshow }: { dataToshow: string }) => {
   const { showModel, setshowModel } = useStudentDashboardStore();
   return (
     <motion.div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[9999]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -222,12 +237,12 @@ export const Model = ({ dataToshow }: { dataToshow: string }) => {
 // Main SideContent component
 const SideContent = ({ whoisThis }: { whoisThis: string }) => {
   const { showModel, setshowModel, userEmail } = useStudentDashboardStore();
-  const [dataToShow, setdataToShow] = useState("Hello,love");
+  const [dataToShow, setdataToShow] = useState("empty");
   const { studentsData, isLoading } = useFetchStudentsData();
   const navigate = useNavigate();
   const currentUserEmail = localStorage.getItem("userEmail");
   const [formLoader, setformLoader] = useState(false);
-  
+
   const NavigateToForm = async () => {
     const emailToUse = currentUserEmail || userEmail;
     setformLoader(true);
@@ -242,9 +257,23 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
       const docRef = doc(db, "Users", emailToUse);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setdataToShow("You have already filled up the form. Check the form status.");
-        setshowModel(true);
-        navigate("/student", { replace: true });
+        if (!("status" in docSnap.data())) {
+          setdataToShow("You have already filled up the form. Check the form status.");
+          setshowModel(true);
+          navigate("/student");
+        }
+        else {
+          if (docSnap.data().status === 'accepted') {
+            setdataToShow("Check the Form Status");
+            setshowModel(true);
+            navigate("/student");
+          }
+          else {
+            setdataToShow("Your Form is Rejected , Please Fill it With Considering Reason from the Form status ");
+            setshowModel(true);
+            navigate("/form");
+          }
+        }
       } else {
         navigate("/form");
       }
@@ -253,12 +282,15 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
     }
     finally {
       setformLoader(false);
+      if (dataToShow === "empty") {
+        setshowModel(false);
+      }
     }
   };
 
   const formstatus = async () => {
     const userEmail = localStorage.getItem("userEmail") || useStudentDashboardStore().userEmail;
-    
+
     if (!userEmail) {
       console.error("User email not found.");
       alert("User email not found. Please sign in again.");
@@ -266,29 +298,30 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
     }
     setformLoader(true);
     try {
-      const docRef = doc(db, "admin", userEmail);
+      const docRef = doc(db, "Users", userEmail);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         if (docSnap.data().status === "accepted") {
           setdataToShow("Your Form is Accepted,visit the office for the Fee Payment")
         }
-        else {
+        else if (docSnap.data().status === "rejected") {
           setdataToShow(`
-            Your Form is Rejected,Please Fill the Form Again (Considering the Reason)
+            Your Form is Rejected,
+            Please Fill the Form Again 
+            (Considering the Reason)
             ${docSnap.data().reason}
             `)
-            localStorage.removeItem("formStatus")
-        }
-        console.log("User email is present in the admin collection.");
-      } else {
-        const docRef = doc(db, "Users", userEmail);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setdataToShow("Your Form is under verification process ")
+          localStorage.removeItem("formStatus")
         }
         else {
-          setdataToShow("Your haven't filled the Form yet! ")
+          setdataToShow(`
+              Your Form is Under Verification
+            `)
+
         }
+        console.log("User email is present in the user collection.");
+      } else {
+        setdataToShow("Your haven't filled the Form yet! ")
       }
     } catch (error) {
       console.error("Error checking form status:", error);
@@ -301,7 +334,7 @@ const SideContent = ({ whoisThis }: { whoisThis: string }) => {
 
   return (
     <div className="min-h-screen w-full max-sm:w-full p-5 max-sm:p-2 relative">
-      {isLoading && <LoadingSpinner dataToShow="loading"/>}
+      {isLoading && <LoadingSpinner dataToShow="loading" />}
 
       <div className="min-h-[90vh] w-full bg-red-500 border-2 border-amber-300 rounded-3xl px-8 max-sm:px-4 py-0 max-sm:py-2 flex items-center justify-center flex-col">
         <Header />

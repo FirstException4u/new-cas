@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../config/firebase";
@@ -12,6 +12,11 @@ function Login({type}: {type: string}) {
     const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
     const setuserEmail = useStudentDashboardStore((state) => state.setuserEmail);
+    
+    useEffect(() => {
+        localStorage.clear();
+      }, []);
+    
     const handleLogin = async () => {
         setErrorMessage("");
 

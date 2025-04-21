@@ -49,14 +49,16 @@ const StudentDataView = () => {
 
   const handleAccepted = async () => {
     try {
-      const adminRef = doc(db, 'admin', StudentData.email);
-      await setDoc(adminRef, { ...StudentData, status: 'accepted', timestamp: new Date() });
+      const UsersRef = doc(db, 'Users', StudentData.email);
+      await setDoc(UsersRef, { ...StudentData, status: 'accepted', timestamp: new Date() });
       toast.success('Student Accepted!', { position: 'top-center' });
     } catch (error) {
       toast.error('Error while accepting student!');
       console.error(error);
     } finally {
-      navigate('/admin');
+      setTimeout(() => {
+        navigate('/admin');
+      }, 2500);
     }
   };
 
@@ -69,9 +71,8 @@ const StudentDataView = () => {
 
     setRejectReason(reason);
     try {
-      await deleteDoc(doc(db, 'Users', StudentData.email));
-      const adminRef = doc(db, 'admin', StudentData.email);
-      await setDoc(adminRef, {
+      const UserRef = doc(db, 'Users', StudentData.email);
+      await setDoc(UserRef, {
         ...StudentData,
         status: 'rejected',
         reason,

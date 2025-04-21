@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,10 @@ function Signup() {
   const [isClicked, setisClicked] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(AuthenticationSchema),
@@ -26,7 +30,7 @@ function Signup() {
       setisClicked(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen w-full flex">
       <div className="min-h-screen w-1/2 bg-[#F9F2E0]">
